@@ -1,6 +1,154 @@
-import './style.css'
+import { fromEvent, merge } from 'rxjs';
+import * as o from 'rxjs/operators';
+import './style.css';
 
-document.querySelector('#app').innerHTML = `
-  <h1>Hello Vite!</h1>
-  <a href="https://vitejs.dev/guide/features.html" target="_blank">Documentation</a>
-`
+const Combinations = {
+  '.-': 'A',
+  '-...': 'B',
+  '-.-.': 'C',
+  '-..': 'D',
+  '.': 'E',
+  '..-.': 'F',
+  '--.': 'G',
+  '....': 'H',
+  '..': 'I',
+  '.---': 'J',
+  '-.-': 'K',
+  '.-..': 'L',
+  '--': 'M',
+  '-.': 'N',
+  '---': 'O',
+  '.--.': 'P',
+  '--.-': 'Q',
+  '.-.': 'R',
+  '...': 'S',
+  '-': 'T',
+  '..-': 'U',
+  '...-': 'V',
+  '.--': 'W',
+  '-..-': 'X',
+  '-.--': 'Y',
+  '--..': 'Z',
+};
+
+const BREAK_TIME = 1000;
+const DOT_TIME = 250;
+
+const KeyCode = 'KeyM';
+const BackspaceCode = 'Backspace';
+const KeyDown = 'keydown';
+const KeyUp = 'keyup';
+const Short = '.';
+const Long = '-';
+
+const keydown$ = fromEvent(document, KeyDown);
+const keyup$ = fromEvent(document, KeyUp);
+
+const keyFilter = (e) => {
+  return e.code === KeyCode;
+};
+const backspaceFilter = (e) => {
+  return e.code === BackspaceCode;
+};
+
+const { tap, filter, distinctUntilChanged, switchMap } = o;
+
+let startSoundTime = 0;
+let startBreakTime = 0;
+let breakTimeout = null;
+
+const getTime = () => new Date().getTime();
+
+let symbols = [];
+const letters = [];
+
+const audio = new Audio('static/telegraph_sound.mp3');
+audio.loop = true;
+
+const startAudio = () => {
+  audio.play();
+  startSoundTime = getTime();
+
+  clearTimeout(breakTimeout);
+};
+
+const stopAudio = () => {
+  audio.pause();
+  audio.currentTime = 0;
+
+  startBreakTime = getTime();
+
+  breakTimeout = setTimeout(() => {
+    letters.push(getLetter(symbols));
+    symbols = [];
+    rerender();
+  }, BREAK_TIME);
+};
+
+const getSoundDuration = () => {
+  return getTime() - startSoundTime;
+};
+
+function rerender() {
+  document.querySelector('#app').innerHTML = `
+  <i>( Press letter 'm' to input signals, Backspace to clear the last letter)</i><br />
+  [ ${symbols.join(' ')} ]<br />
+  [ ${letters.join('')} ]<br />
+  ${Object.entries(Combinations)
+    .map(([combination, letter]) => {
+      return `<strong>${combination}</strong> : ${letter}<br />`;
+    })
+    .join(' ')}
+`;
+}
+
+rerender();
+
+merge(keydown$, keyup$)
+  .pipe(
+    filter(keyFilter),
+    distinctUntilChanged((prev, cur) => {
+      return prev.type === cur.type;
+    }),
+    tap((e) => {
+      if (e.type === KeyDown) {
+        startAudio();
+      }
+    }),
+
+    tap((e) => {
+      if (e.type === KeyUp) {
+        stopAudio();
+        const symbol = getSoundDuration() < DOT_TIME ? Short : Long;
+
+        symbols.push(symbol);
+        rerender();
+      }
+    })
+  )
+  .subscribe();
+
+keydown$
+  .pipe(
+    filter(backspaceFilter),
+    tap(() => {
+      letters.pop();
+      rerender();
+    })
+  )
+  .subscribe();
+
+function getLetter(symbols) {
+  let combination = symbols.join('');
+  if (Combinations[combination]) {
+    return Combinations[combination];
+  } else {
+    while (combination.length) {
+      combination = combination.slice(0, -1);
+      if (Combinations[combination]) {
+        return Combinations[combination];
+      }
+    }
+    return '!';
+  }
+}
