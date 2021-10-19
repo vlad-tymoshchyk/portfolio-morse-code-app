@@ -2,6 +2,8 @@ import { fromEvent, merge } from 'rxjs';
 import * as o from 'rxjs/operators';
 import './style.css';
 
+import audioUrl from './static/telegraph_sound.mp3';
+
 const Combinations = {
   '.-': 'A',
   '-...': 'B',
@@ -62,7 +64,7 @@ const getTime = () => new Date().getTime();
 let symbols = [];
 const letters = [];
 
-const audio = new Audio('static/telegraph_sound.mp3');
+const audio = new Audio(audioUrl);
 audio.loop = true;
 
 const startAudio = () => {
