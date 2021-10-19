@@ -92,7 +92,7 @@ const getSoundDuration = () => {
 
 function rerender() {
   document.querySelector('#app').innerHTML = `
-  <i>( Press letter 'm' or click the button to input signals, Backspace to clear the last letter)</i><br />
+  <i>( Press letter 'm' to input signals, Backspace to clear the last letter)</i><br />
   [ ${symbols.join(' ')} ]<br />
   [ ${letters.join('')} ]<br />
   ${Object.entries(Combinations)
@@ -105,11 +105,11 @@ function rerender() {
 
 rerender();
 
-const button = document.getElementById('clicker');
-const buttondown$ = fromEvent(button, MouseDown);
-const buttonup$ = fromEvent(button, MouseUp);
+// const button = document.getElementById('clicker');
+// const buttondown$ = fromEvent(button, MouseDown);
+// const buttonup$ = fromEvent(button, MouseUp);
 
-merge(keydown$, keyup$, buttondown$, buttonup$)
+merge(keydown$, keyup$ /* , buttondown$, buttonup$ */)
   .pipe(
     filter(keyFilter),
     distinctUntilChanged((prev, cur) => {
