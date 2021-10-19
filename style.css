@@ -1,3 +1,13 @@
-#app {
+#container {
   text-align: center;
+}
+
+#clicker {
+  margin: 10px;
+  padding: 10px 30px;
+  background: blue;
+  color: white;
+  font-size: 18px;
+  border: 1px solid red;
+  border-radius: 5px;
 }

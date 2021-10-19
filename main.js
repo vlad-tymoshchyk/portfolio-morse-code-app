@@ -40,6 +40,8 @@ const KeyCode = 'KeyM';
 const BackspaceCode = 'Backspace';
 const KeyDown = 'keydown';
 const KeyUp = 'keyup';
+const MouseDown = 'mousedown';
+const MouseUp = 'mouseup';
 const Short = '.';
 const Long = '-';
 
@@ -47,16 +49,15 @@ const keydown$ = fromEvent(document, KeyDown);
 const keyup$ = fromEvent(document, KeyUp);
 
 const keyFilter = (e) => {
-  return e.code === KeyCode;
+  return e.code === KeyCode || e.type === MouseDown || e.type === MouseUp;
 };
 const backspaceFilter = (e) => {
   return e.code === BackspaceCode;
 };
 
-const { tap, filter, distinctUntilChanged, switchMap } = o;
+const { tap, filter, distinctUntilChanged } = o;
 
 let startSoundTime = 0;
-let startBreakTime = 0;
 let breakTimeout = null;
 
 const getTime = () => new Date().getTime();
@@ -77,8 +78,6 @@ const startAudio = () => {
 const stopAudio = () => {
   audio.pause();
   audio.currentTime = 0;
-
-  startBreakTime = getTime();
 
   breakTimeout = setTimeout(() => {
     letters.push(getLetter(symbols));
@@ -106,20 +105,24 @@ function rerender() {
 
 rerender();
 
-merge(keydown$, keyup$)
+const button = document.getElementById('clicker');
+const buttondown$ = fromEvent(button, MouseDown);
+const buttonup$ = fromEvent(button, MouseUp);
+
+merge(keydown$, keyup$, buttondown$, buttonup$)
   .pipe(
     filter(keyFilter),
     distinctUntilChanged((prev, cur) => {
       return prev.type === cur.type;
     }),
     tap((e) => {
-      if (e.type === KeyDown) {
+      if (e.type === KeyDown || e.type === MouseDown) {
         startAudio();
       }
     }),
 
     tap((e) => {
-      if (e.type === KeyUp) {
+      if (e.type === KeyUp || e.type === MouseUp) {
         stopAudio();
         const symbol = getSoundDuration() < DOT_TIME ? Short : Long;
 
