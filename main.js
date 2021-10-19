@@ -31,7 +31,7 @@ const Combinations = {
   '--..': 'Z',
 };
 
-const BREAK_TIME = 1000;
+const BREAK_TIME = 500;
 const DOT_TIME = 250;
 
 const KeyCode = 'KeyM';
